@@ -1,0 +1,96 @@
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 11px;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  overflow: hidden;
+  white-space: nowrap;
+  outline: none;
+}
+
+.sm  { padding: 8px 18px;  border-radius: var(--radius-sm); }
+.md  { padding: 12px 28px; border-radius: var(--radius-sm); }
+.lg  { padding: 16px 40px; border-radius: var(--radius-sm); min-width: 220px; font-size: 12px; }
+
+/* Primary — violet */
+.primary {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: #fff;
+  box-shadow: 0 0 20px rgba(124,58,237,0.35), 0 2px 0 rgba(0,0,0,0.3);
+}
+.primary:hover:not(.disabled) {
+  background: var(--amber-light);
+  border-color: var(--amber-light);
+  transform: translateY(-1px);
+  box-shadow: 0 0 32px rgba(124,58,237,0.55), 0 4px 0 rgba(0,0,0,0.2);
+}
+.primary:active:not(.disabled) {
+  transform: translateY(0);
+  box-shadow: 0 0 12px rgba(124,58,237,0.3);
+}
+
+/* Secondary */
+.secondary {
+  background: transparent;
+  border-color: var(--border-dark);
+  color: var(--ink);
+}
+.secondary:hover:not(.disabled) {
+  background: var(--cream-darker);
+  border-color: var(--ink-muted);
+  transform: translateY(-1px);
+}
+
+/* Danger */
+.danger {
+  background: transparent;
+  border-color: var(--rose-border);
+  color: var(--rose);
+}
+.danger:hover:not(.disabled) {
+  background: var(--rose-pale);
+  border-color: var(--rose);
+  transform: translateY(-1px);
+  box-shadow: 0 0 16px rgba(239,68,68,0.2);
+}
+
+/* Ghost */
+.ghost {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--ink-muted);
+}
+.ghost:hover:not(.disabled) {
+  background: var(--cream-darker);
+  color: var(--ink);
+  border-color: var(--border-mid);
+}
+
+.disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; }
+.icon     { display: flex; align-items: center; }
+.label    { position: relative; z-index: 1; }
+
+.spinner {
+  width: 13px; height: 13px;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+.secondary .spinner,
+.ghost .spinner {
+  border-color: rgba(238,237,248,0.15);
+  border-top-color: var(--ink);
+}
