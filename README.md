@@ -1,15 +1,34 @@
-# Screen Share Test App — Next.js
+# 🖥️ Screen Share Test App — Next.js 14
 
-A production-grade **Next.js 14** (App Router) + **TypeScript** application for testing browser screen-sharing via the native `getDisplayMedia` Web API.
+> A production-ready **Next.js 14 (App Router) + TypeScript** application built for the **Frontend Shortlisting Task – Screen Sharing Test (MERN)**.
+
+![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)
+![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?style=flat-square&logo=typescript)
+![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
 ---
 
-## Setup Instructions
+## ✨ What This Project Demonstrates
+
+- ✅ Browser screen-sharing permission handling
+- ✅ Media stream lifecycle detection
+- ✅ Accurate success / failure state handling
+- ✅ Proper cleanup with **no media leaks**
+- ✅ Clean React architecture using a **custom hook**
+- ✅ **No third-party screen-sharing libraries** — Native Web APIs only
+
+---
+
+## 🚀 Setup
 
 ### Prerequisites
-- Node.js 18+
-- npm 9+
-- Chrome 72+ or Edge 79+
+
+| Requirement | Version |
+|---|---|
+| Node.js | 18+ |
+| npm | 9+ |
+| Browser | Chrome or Edge (latest) |
 
 ### Install & Run
 
@@ -20,9 +39,9 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open: [http://localhost:3000](http://localhost:3000)
 
-### Build for Production
+### Production Build
 
 ```bash
 npm run build
@@ -31,121 +50,145 @@ npm start
 
 ---
 
-## Project Structure
+## 🏗️ Project Structure
 
 ```
 src/
 ├── app/
-│   ├── layout.tsx               # Root layout (fonts, metadata)
-│   ├── globals.css              # CSS variables, keyframes, base styles
-│   ├── page.tsx                 # Route: /  (Server Component wrapper)
-│   └── screen-test/
-│       └── page.tsx             # Route: /screen-test (Server Component wrapper)
+│   ├── page.tsx                  →  Homepage (/)
+│   └── screen-test/page.tsx      →  Screen Test (/screen-test)
+│
 ├── components/
-│   ├── HomeClient.tsx           # Homepage UI ('use client')
-│   ├── HomeClient.module.css
-│   ├── ScreenTestClient.tsx     # Screen test UI ('use client')
-│   ├── ScreenTestClient.module.css
-│   ├── Button.tsx               # Reusable button component
-│   └── Button.module.css
+│   ├── HomeClient.tsx
+│   ├── ScreenTestClient.tsx
+│   └── Button.tsx
+│
 └── hooks/
-    └── useScreenShare.ts        # All screen-sharing logic ('use client')
+    └── useScreenShare.ts
 ```
 
-### Why Server + Client split?
-Next.js App Router defaults to Server Components. Since `getDisplayMedia`, `useRef`, `useState`, and `useEffect` are browser-only APIs, all interactive logic lives in Client Components (`'use client'`). The page files (`page.tsx`) are thin Server Components that simply render the Client Components — this is the correct Next.js pattern.
+> **Architecture notes:**
+> - Server Components wrap all pages
+> - All interactive logic lives in Client Components
+> - Screen logic is isolated inside the `useScreenShare` hook
 
 ---
 
-## Screen-Sharing Flow
+## 🖥️ Application Flow
 
-### State Machine
+### 1️⃣ Homepage (`/`)
 
-```
-idle → requesting → active → stopped
-                 ↘ cancelled
-                 ↘ denied
-                 ↘ error
-```
+- Title: **Screen Share Test App**
+- Button: **Start Screen Test**
+- Before navigation, checks API availability:
+  ```ts
+  typeof navigator.mediaDevices?.getDisplayMedia === 'function'
+  ```
+- Shows an **unsupported message** if the API is not available
 
-### Step 1 — Capability Check (/)
+---
+
+### 2️⃣ Screen Test Page (`/screen-test`)
+
+On button click, requests screen access:
+
 ```ts
-typeof navigator.mediaDevices?.getDisplayMedia === 'function'
-```
-If false, shows an unsupported card inline. No navigation.
-
-### Step 2 — Permission Request
-```ts
-await navigator.mediaDevices.getDisplayMedia({
+navigator.mediaDevices.getDisplayMedia({
   video: { frameRate: { ideal: 30 } },
   audio: false,
 })
 ```
-`status = 'requesting'` shows animated spinner while picker is open.
 
-### Step 3 — Error Discrimination
-| DOMException.name | State | Meaning |
-|---|---|---|
-| `NotAllowedError` + "permission denied" in message | `denied` | Browser/OS blocked |
-| `NotAllowedError` (no "denied") | `cancelled` | User closed picker |
-| `NotFoundError` | `error` | No screen source |
-| `NotReadableError` | `error` | Hardware/OS lock |
-| Other | `error` | Unknown |
+#### States Handled
 
-### Step 4 — Metadata Extraction
-```ts
-const settings = videoTrack.getSettings()
-// settings.width, settings.height, settings.frameRate
-// settings.displaySurface → 'browser' | 'window' | 'monitor'
-```
-
-### Step 5 — Lifecycle Detection
-```ts
-videoTrack.onended = () => {
-  setStatus('stopped')
-  // release all tracks + clear video.srcObject
-}
-```
-Fires when the user clicks "Stop sharing" in Chrome's bottom toolbar.
-
-### Step 6 — Cleanup
-```ts
-useEffect(() => {
-  return () => cleanup() // runs on unmount
-}, [cleanup])
-```
-Stops all tracks and nullifies `onended` handlers — no leaks.
-
----
-
-## Known Limitations & Browser Quirks
-
-**`displaySurface` support**  
-Available in Chrome/Edge. Returns `undefined` in Firefox. Falls back to `"Screen"`.
-
-**Cancellation vs Denial**  
-Chrome uses `NotAllowedError` for both. The app parses `err.message` for "permission denied" to distinguish them — this is a heuristic and may vary by browser version.
-
-**Mobile**  
-`getDisplayMedia` is unsupported on all mobile browsers. The homepage detects this and shows a clear message instead of navigating.
-
-**HTTPS required**  
-`getDisplayMedia` only works in a secure context (HTTPS or localhost).
-
-**`frameRate` rounding**  
-The reported `frameRate` from `getSettings()` is the initial negotiated rate — actual delivery may differ. Displayed value is `Math.round()`ed.
-
----
-
-## Tech Stack
-
-| Tool | Purpose |
+| State | Description |
 |---|---|
-| Next.js 14 (App Router) | Framework, routing, SSR |
-| TypeScript | Type safety throughout |
-| CSS Modules | Scoped component styles |
-| `next/font/google` | Syne + JetBrains Mono |
-| `getDisplayMedia` | Native screen sharing |
-| React 18 | UI rendering |
+| `requesting` | Permission dialog is open |
+| `active` | Permission granted, stream is live |
+| `cancelled` | User dismissed the picker |
+| `denied` | Browser or user blocked access |
+| `stopped` | Stream was ended by user or browser |
+| `error` | An unexpected error occurred |
 
-No Tailwind. No component libraries. No screen-sharing libraries. No backend.
+> The UI reflects the **exact current state** at all times.
+
+---
+
+#### 📺 Live Preview & Metadata
+
+After permission is granted, the app displays:
+
+- **Live preview** of the shared screen
+- **Display type** — `tab` / `window` / `screen`
+- **Resolution** — `width × height`
+- **Frame rate**
+
+All metadata is read via `track.getSettings()`. No recording. No backend. **Local preview only.**
+
+---
+
+#### 🔄 Lifecycle Detection
+
+```ts
+track.onended = () => { setStatus('stopped') }
+```
+
+Detects:
+- User clicking **"Stop sharing"** in the browser UI
+- Browser programmatically ending the stream
+- All tracks are **properly stopped and cleaned up on unmount**
+
+---
+
+#### 🔁 Retry Flow
+
+After a stream stops:
+1. Shows **"Screen sharing stopped"** message
+2. **Retry button** starts a fresh `getDisplayMedia` request
+3. Old streams are **never reused**
+4. **No media leaks**
+
+---
+
+## ⚙️ Tech Stack
+
+| Technology | Details |
+|---|---|
+| Next.js | 14 — App Router |
+| React | 18 |
+| TypeScript | Strict mode |
+| Styling | CSS Modules |
+| Screen API | Native `getDisplayMedia` |
+
+> ❌ No Tailwind. &nbsp; ❌ No UI libraries. &nbsp; ❌ No third-party screen-sharing packages.
+
+---
+
+## ⚠️ Known Limitations
+
+- `getDisplayMedia` requires **HTTPS** (or `localhost`)
+- **Not supported** on mobile browsers
+- `displaySurface` constraint is **not supported in Firefox**
+- Chrome throws `NotAllowedError` for both **cancel** and **deny** — handled via error message parsing
+
+---
+
+## 🌐 Browser Support
+
+| Browser | Supported |
+|---|---|
+| Google Chrome (latest) | ✅ |
+| Microsoft Edge (latest) | ✅ |
+| Firefox | ⚠️ Partial (`displaySurface` unavailable) |
+| Safari | ❌ Not supported |
+| Mobile browsers | ❌ Not supported |
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
+
+---
+
+<p align="center">Built with ❤️ using Next.js 14 & Native Web APIs</p>
